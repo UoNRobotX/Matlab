@@ -1,59 +1,32 @@
-function [x,P] = UKF(P,x,u,y,processModel,measurementModel,param,stateConstraint)
+function [x,Px] = UKF(x,y,yhat,u,process,measure,param)
 
-%
-% Input arguments
-%
-% x: current state        (n x 1)
-% u: current input        (m x 1)
-% y: current measurement  (p x 1)
-%
-% P: estimation error covariance (n x n)
-%
-% processModel:     function handle to process model
-% measurementModel: function handle to measurement model
-% param:            parameters to pass to process and measurement models
-% stateConstraint:  function handle to state constraints (optional)
-%
+pfunc = @(x) process(x,u,param);
+mfunc = @(x) measure(x,u,yhat,param);
 
-pFunc = @(x) processModel(x,u,param);
-mFunc = @(x) measurementModel(x,u,param);
-if nargin >= 8
-    cFunc = @(x) stateConstraint(x,param);
-else
-    cFunc = @(x) x;
-end
+%--------------------------------------------------------------------------
+% Obtain Covariance Matrices for Process and Measurement Models
 
-% Retrieve process and measurement covariance for the current
-% state and input
-[~,~,~,Q] = processModel(x,u,param);
-[~,~,~,R] = measurementModel(x,u,param);
+[~,Q] = process(x,u,param);
+[~,R] = measure(x,u,yhat,param);
 
-%
-% Apply unscented transform through process model to obtain
-% a priori state estimate and covariance
-%
-[x,P,sigma] = UT(x,P,pFunc,length(x),cFunc);
+%--------------------------------------------------------------------------
+% Apply Unscented Transform through Process Model to Obtain a Priori State
+% Estimate and Covariance
 
-P = P + Q;          % Add process uncertainty
+[x,Px,xsigma,~] = Unscented(x,param.P,pfunc,length(x),[]);
+Px = Px + Q; 
 
-%
-% Apply unscented transform through the measurement model to obtain
-% measurement covariance and cross covariance between state and measurement
-%
-[yhat,Py,~,Pxy] = UT(x,P,mFunc,length(y),cFunc, ...
-    sigma ...              % Re-use existing sigma points
-    );
+%--------------------------------------------------------------------------
+% Apply Unscented Transform through Measurement Model to Obtain
+% Measurement Covariance and Cross Covariance Between State and 
+% Measurement
 
-Py = Py + R;        % Add measurement uncertainty
+[yhat,Py,~,Pxy] = Unscented(x,Px,mfunc,length(y),xsigma);
+Py = Py + R;
 
-%
-% a posteriori state estimate and covariance
-%
+%--------------------------------------------------------------------------
+% A Posteriori State Estimate and Covariance
+
 K = Pxy/Py;
 x = x + K*(y - yhat);
-P = P - K*Py*K.';
-
-% Apply constraints
-if nargin >= 8
-    x = stateConstraint(x,param);
-end
+Px = Px - K*Py*K.';

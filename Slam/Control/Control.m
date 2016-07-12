@@ -1,15 +1,9 @@
-function [realxy,realpsi,realvxy,realvpsi,realacc] = Control(desired)
-%This function outputs the new real two dimensional states of the boat
-%using control optimisation techniques
+function [state] = Control(state,traj,ctrl,boat)
+% This function outputs the new desired state of the boat
 
-% Testing Control System
-realxy = desired(1:2);
-realpsi = desired(3);
-realvxy = desired(4:5);
-realvpsi = desired(6);
-realacc = desired(7:8);
+%--------------------------------------------------------------------------
+% Control Algorithm
 
-% Real Control System
-% STEPH HERE!
+state = state + [0.1;zeros(11,1)];
 
 end
