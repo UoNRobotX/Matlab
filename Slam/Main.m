@@ -29,7 +29,6 @@ while (norm(displace) > path.err)&&(count ~= path.iterations)
     displace = abs(state(1:2) - goal);        
     gridhist(:,:,count) = grid;
     esthist(:,count) = est([1,2,6]);
-    stahist(:,count) = state([1,2,6]);
     phist(:,count+1) = diag(sen.P.'*sen.P);
     count = count + 1;
 end
@@ -37,4 +36,4 @@ end
 %--------------------------------------------------------------------------
 % Plot Results
 
-Results(gridhist,phist,obs,lmrks,esthist,stahist,goal,boat,sen,map,count);
+Results(gridhist,phist,obs,lmrks,esthist,goal,boat,sen,map,count);
