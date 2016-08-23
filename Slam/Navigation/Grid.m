@@ -24,7 +24,8 @@ end
 %--------------------------------------------------------------------------
 % Update Grids Via Decrease all, Increase in Circle, Constant in Ellipse
      
-current = grid; grid(scan) = max(grid(scan)-dec,minval);
+current = grid;  % Stores a copy of grid before changes are made
+grid(scan) = max(grid(scan)-dec,minval);  % Decriments all cells within the radius (lower bounded by minval)
 rnGN = res.*[cells-0.5;zeros(1,size(cells,2))]; len = size(rnGN,2);
 for count = 1:obs
     rnPNmat = repmat(rnPN(:,count),1,len);
@@ -33,7 +34,7 @@ for count = 1:obs
     rcGC = (RnCN(:,cind(:,count))')*(rnGN - rnCNmat);
     magnitude = sqrt(sum((rnPNmat-rnGN).^2));   
     ind = nonzeros((magnitude <= rad(count)).*(1:len));
-    circle = sub2ind(size(grid),cells(1,ind),cells(2,ind));  
+    circle = sub2ind(size(grid),cells(1,ind),cells(2,ind)); % Obtains a vector of linear indicies for all grid cells within obstacle radius
     if ~isempty(circle)
         deccir = repmat(dec,1,length(circle));
         change = (current(circle) - grid(circle)) ~= dec;
@@ -41,7 +42,7 @@ for count = 1:obs
         if ~isempty(indcir)
             deccir(indcir) = 0;
         end
-        grid(circle) = min(grid(circle) + inc + deccir,maxval);
+        grid(circle) = min(grid(circle) + inc + deccir,maxval); % Increments all cells within radius that are empty (upper bounded by maxval)
     end
     norms = sqrt(sum(rcGC.^2));
     dotprod = sum(rcQCmat.*rcGC)./norms; thGC = acos(dotprod);   
@@ -59,6 +60,6 @@ for count = 1:obs
         grid(ellipse) = max(grid(ellipse) + decell,minval); 
     end 
 end 
-gridy = grid - current; 
+gridy = grid - current; % This is incorrect. Need to modify gridy within the loop
 
 end

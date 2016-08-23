@@ -3,7 +3,8 @@ function [grid,y,yht] = Nav(grid,est,QC,LC,ocam,lcam,rad,lmrk,sen,hght,map)
 % data and approximated map data
 
 camera = sen.camera; 
-res = map.res; radgrid = sen.rad/res;
+res = map.res; 
+radgrid = sen.rad/res;  % radius of cameras (number of cells)
 
 %--------------------------------------------------------------------------
 % Rotation Matrices and Translation Vectors
@@ -21,7 +22,7 @@ RnCN = RnBN*sen.RbCB;
 %--------------------------------------------------------------------------
 % Obtain Index of Grid Cells Within Radius
 
-gridpose = est(1:2)./res + 1;
+gridpose = est(1:2)./res + 1; % Location of vehicle in gridmap (Note: +1 for MATLAB notation)
 lim = round([gridpose-radgrid,gridpose+radgrid]);
 xlim = max(1,min(lim(1,:),repmat(size(grid,1),1,2)));
 ylim = max(1,min(lim(2,:),repmat(size(grid,2),1,2)));
@@ -32,7 +33,7 @@ diff = gridcells - repmat(gridpose,1,size(gridcells,2));
 norms = sqrt(sum(diff.^2));
 radind = nonzeros((norms <= radgrid).*(1:size(gridcells,2)));
 cells = gridcells(:,radind);
-scan = sub2ind(size(grid),cells(1,:),cells(2,:));
+scan = sub2ind(size(grid),cells(1,:),cells(2,:)); % Obtains a vector of linear indicies for all grid cells within observation radius
 
 %--------------------------------------------------------------------------
 % Update Grids if Detected Obstacles, Obtain Obstacle & Landmark Data
