@@ -19,13 +19,13 @@ displace = abs(state(1:2)-goal); tic;
 % Simulation
 
 while (norm(displace) > path.err)&&(count ~= path.iterations)
-    est = state + statestd.*randn(12,1);
+    est = state; %+ statestd.*randn(12,1);
     [QC,LC,rad,ocam,lcam,lndid] = Camera(state,sen,boat,obs,lmrks);
     [grid,y,yhat] = Nav(grid,est,QC,LC,ocam,lcam,rad,lmrks(:,lndid),...
     sen,boat.height,map);       
-    [est,sen.P] = UKF(est,[est(1:6);y],yhat,[],@Process,@Measure,sen);
-    [traj] = Path(est,grid,map,path,boat);
-    [state] = Control(state,traj,ctrl,boat); 
+%     [est,sen.P] = UKF(est,[est(1:6);y],yhat,[],@Process,@Measure,sen);
+%     [traj] = Path(est,grid,map,path,boat);
+    [state] = Control(state,[],ctrl,boat); 
     displace = abs(state(1:2) - goal);        
     gridhist(:,:,count) = grid;
     esthist(:,count) = est([1,2,6]);
@@ -36,4 +36,4 @@ end
 %--------------------------------------------------------------------------
 % Plot Results
 
-Results(gridhist,phist,obs,lmrks,esthist,goal,boat,sen,map,count);
+Results(gridhist,phist,obs,lmrks,esthist,goal,boat,sen,map,count,toc);

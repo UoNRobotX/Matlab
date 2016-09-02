@@ -1,4 +1,4 @@
-function [grid,y,yht] = Nav(grid,est,QC,LC,ocam,lcam,rad,lmrk,sen,hght,map)
+function [gridnew,y,yht] = Nav(grid,est,QC,LC,ocam,lcam,rad,lmrk,sen,hght,map)
 % Thus function updates the virtual map whilst obtaining the current sensor
 % data and approximated map data
 
@@ -38,8 +38,8 @@ scan = sub2ind(size(grid),cells(1,:),cells(2,:)); % Obtains a vector of linear i
 %--------------------------------------------------------------------------
 % Update Grids if Detected Obstacles, Obtain Obstacle & Landmark Data
 
-[grid,gridy] = Grid(grid,rnCN,RnCN,QC,ocam,rad,scan,cells,map); 
-[yo,yhto] = MeasureObs(gridy,grid,map,rnBN(1:2,:),scan);
+[gridnew,gridy] = Grid(grid,rnCN,RnCN,QC,ocam,rad,scan,cells,map); 
+[yo,yhto] = MeasureObs(gridy,gridnew,map,rnBN(1:2,:),scan);
 [yl,yhtl] = MeasureLand(rnCN,RnCN,rnBN,RnBN,LC,lcam,lmrk);
 y = [yo;yl]; 
 yht = [yhto;yhtl];
