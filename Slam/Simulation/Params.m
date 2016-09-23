@@ -8,7 +8,6 @@ function [boat,ctrl,path,sen,map,land,obs,goal,state] = Params(ind)
 boat.constraints = [];                  % Physical Constraints of Boat
 boat.length = 3.5;                      % Length of boat [m]
 boat.width = 2.5;                       % Width of boat [m]
-boat.height = -1.25;                    % Height of boat [m]
 
 %--------------------------------------------------------------------------
 % Control Parameters
@@ -31,9 +30,9 @@ map.max = 50;                           % Max Occupancy Grid Value
 map.min = -50;                          % Min Occupancy Grid Value
 map.thres = 20;                         % Occupied Threshold
 map.res = 0.2;                          % Resolution of Map [m]
-map.width = 40;                         % Width of Field [m]
+map.height = 40;                        % Height of Field [m]
 map.length = 60;                        % Length of Field [m]
-map.lrad = 0.2286;                      % Radii of Landmarks [m]
+map.lrad = 0.2286;                      % Height of Landmarks [m]
 map.orad = 1.8.*[0.216,0.343,0.4699];   % Radii of Obstalces [m]
 
 %--------------------------------------------------------------------------
@@ -59,8 +58,9 @@ Qpqr = 1e-16*(pi/180).*ones(1,3);       % Angular Velocities [rad^2/s^2]
 %--------------------------------------------------------------------------
 % Sensor Parameters
 
+sen.height = -1.25;                     % Height of Cross [m]
 sen.camera = 4;                         % Number of Cameras
-sen.time = 0.2;                         % Sample Time [s]
+sen.time = 0.05;                        % Sample Time [s]
 sen.rad = 45;                           % Radial Distance of cameras [m]
 sen.fov = (pi/180).*[191,40,40,191];    % Camera Field of View [rad]
 sen.cnoise = 1e-5.*[1,0.1*(pi/180)];    % Camera Noise [m^2,rad^2]  
@@ -76,17 +76,18 @@ sen.RbCB = [RbCB1,RbCB2,RbCB3,RbCB4];   % Camera Rotations on Boat
 %--------------------------------------------------------------------------
 % Landmark & Obstalce Positions
 
-start = [5,20,35];
-state = [0,start(ind(1)),boat.height,zeros(1,9)]';
-goal = [map.length,start(ind(2))]';
-landx = [zeros(1,4),map.length.*ones(1,4)];
-landy = repmat((map.width/3)*[0,1,2,3],1,2);
-landz = -map.lrad*ones(1,8);
-land = [landx;landy;-landz];
-obsx = repmat((map.length/4).*[1,2,3],1,3);
-obsy = repmat((map.width/4).*[1,2,3],1,3); 
+setup = [5,20,35];
+initang = deg2rad([10,5,90]);
+state = [setup(ind(1)),0,sen.height,initang,zeros(1,6)]';
+goal = [setup(ind(2)),map.length]';
+landn = repmat((map.height/3)*[0,1,2,3],1,2);
+lande = [zeros(1,4),map.length.*ones(1,4)];
+landd = -map.lrad*ones(1,8);
+land = [landn;lande;landd];
+obsn = repmat((map.height/4).*[1,2,3],1,3); 
+obse = repmat((map.length/4).*[1,2,3],1,3);
 index = sort(repmat((1:3),1,3));
-obsz = map.orad([1,1,1,2,2,2,3,3,3]);
-obs = [obsx;obsy(index);-obsz];
+obsd = -map.orad(repmat([1,2,3],1,3));
+obs = [obsn;obse(index);obsd];
 
 end

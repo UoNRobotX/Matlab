@@ -1,15 +1,16 @@
-function [QC,LC,rad,ocam,lcam,lndid] = Camera(state,sen,boat,obs,lmrks)
+function [obsinfo,lndinfo,obscam,lndcam] = Camera(state,sen,obs,lmrks)
 %This function collects all necessary Camera Data for Map Updation
 
 vision = sen.rad; deg = sen.fov; camera = sen.camera; 
 rol = state(4); pit = state(5); yaw = state(6);
-ocam = []; rad = []; lcam = []; lndid = [];
-QC = zeros(4,camera*(length(obs))); LC = zeros(4,camera*(length(lmrks))); 
+obsinfo = zeros(5,camera*(length(obs))); 
+lndinfo = zeros(5,camera*(length(lmrks))); 
+obscam = []; lndcam = [];
 
 %--------------------------------------------------------------------------
 % Rotation Matrices and Translation Vectors
 
-rnBN = [state(1);state(2);cos(pit)*cos(rol)*boat.height];                                             
+rnBN = [state(1);state(2);cos(pit)*cos(rol)*sen.height];                                             
 RnBN = [cos(yaw)*cos(pit),-sin(yaw)*cos(rol)+cos(yaw)*sin(pit)*sin(rol),...
 sin(yaw)*sin(rol)+cos(yaw)*cos(rol)*sin(pit); sin(yaw)*cos(pit),...
 cos(yaw)*cos(rol)+sin(rol)*sin(pit)*sin(yaw), ...
@@ -21,8 +22,8 @@ RnCN = RnBN*sen.RbCB;
 %--------------------------------------------------------------------------
 % Obtain Noisy Information form Each Camera Image
 
-oid = 1; obsind = 1:size(obs,2);
-lid = 1; lndind = 1:size(lmrks,2);
+oindex = 1; obsind = 1:size(obs,2);
+lindex = 1; lndind = 1:size(lmrks,2);
 for count = 1:camera     
     trans = rnCN(:,count);
     rot = RnCN(:,(3*count)-2:(3*count))';
@@ -33,12 +34,13 @@ for count = 1:camera
     ind = nonzeros((norms <= vision).*(abs(bearing) <= ang).*obsind);  
     if ~isempty(ind)
         num = length(ind);
-        ocam = cat(2,ocam,repmat(count,1,num)); 
-        rad = cat(2,rad,-obs(3,ind)); 
+        arr = oindex:oindex+num-1;
+        obscam = cat(2,obscam,repmat(count,1,num)); 
         mag = sqrt(sum(loc(:,ind).^2));
-        QC(1:3,oid:oid+num-1) = loc(:,ind)./repmat(mag,3,1);
-        QC(4,oid:oid+num-1) = asin(rad(oid:oid+num-1)./mag);
-        oid = oid + num;
+        obsinfo(1:3,arr) = loc(:,ind)./repmat(mag,3,1);
+        obsinfo(4,arr) = asin(-obs(3,ind)./mag);
+        obsinfo(5,arr) = -obs(3,ind); 
+        oindex = oindex + num;
     end  
     loc = rot*(lmrks-repmat(trans,1,size(lmrks,2)));
     norms = sqrt(sum(loc.^2));
@@ -46,15 +48,16 @@ for count = 1:camera
     ind = nonzeros((norms <= vision).*(abs(bearing) <= ang).*lndind);
     if ~isempty(ind)
         num = length(ind);
-        lcam = cat(2,lcam,repmat(count,1,num)); 
-        lndid = cat(1,lndid,ind); 
-        mag = sqrt(sum(loc(:,ind).^2));
-        LC(1:3,lid:lid+num-1) = loc(:,ind)./repmat(mag,3,1);
-        LC(4,lid:lid+num-1) = asin(-lmrks(3,ind)./mag);
-        lid = lid + num;
+        arr = lindex:lindex+num-1;
+        lndcam = cat(2,lndcam,repmat(count,1,num)); 
+        mag = sqrt(sum(loc(:,ind).^2));        
+        lndinfo(1:3,arr) = loc(:,ind)./repmat(mag,3,1);
+        lndinfo(4,arr) = asin(-lmrks(3,ind)./mag);
+        lndinfo(5,arr) = ind;
+        lindex = lindex + num;
     end     
 end
-QC = QC(:,any(QC,1));
-LC = LC(:,any(LC,1));
+obsinfo = obsinfo(:,any(obsinfo,1));
+lndinfo = lndinfo(:,any(lndinfo,1));
 
 end

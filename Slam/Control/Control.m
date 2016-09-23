@@ -4,6 +4,6 @@ function [state] = Control(state,traj,ctrl,boat)
 %--------------------------------------------------------------------------
 % Control Algorithm
 
-state = state + [0.1;zeros(11,1)];
+state = state + [0;0.1;zeros(10,1)];
 
 end
